@@ -1,0 +1,298 @@
+---
+
+- name: "Check if a PCE RPM is already installed"
+  command: rpm -q illumio-pce 
+  args:
+    warn: false
+  register: result
+  failed_when: result.rc > 2
+  when: "prefix_name in group_names"
+
+
+- name: "Fail build if existing install exists"
+  fail:
+    msg: "PCE package already installed"
+  when: "prefix_name in group_names and result.rc == 0"
+
+
+- name: "Configure Kernel Parameters"
+  blockinfile:
+      dest: /etc/sysctl.conf
+      block: | 
+        kernel.shmmax = 60000000
+        vm.overcommit_memory = 1
+        fs.file-max = 100000
+        net.core.somaxconn = 16384
+  when: "prefix_name in group_names"
+
+
+- name: "Update Data node limits"
+  blockinfile:
+    dest: /etc/security/limits.conf
+    block: |
+      *               soft    core            unlimited
+      *               hard    core            unlimited
+  when: "prefix_name in group_names and 'datanodes' in group_names"
+
+- name: "Update Core node limits"
+  blockinfile:
+    dest: /etc/security/limits.conf
+    block: |
+      *               soft    core            unlimited
+      *               hard    core            unlimited
+      *               hard    nproc           65535
+      *               soft    nproc           65535
+      *               hard    nofile          65535
+      *               soft    nofile          65535
+  when: "prefix_name in group_names and 'corenodes' in group_names"
+
+- name: "Check if 90-nproc.conf exists on RHEL/Centos 6"
+  stat:
+    path: /etc/security/limits.d/90-nproc.conf
+  register: c6nproc
+  when: "prefix_name in group_names and ansible_distribution_major_version|int == 6"
+
+- name: "Update 90-nproc.conf on RHEL/Centos 6"
+  blockinfile:
+    dest: /etc/security/limits.d/90-nproc.conf
+    block: |
+      *               hard    nproc           65535
+      *               soft    nproc           65535
+  when: "prefix_name in group_names and ansible_distribution_major_version|int == 6 and c6nproc.stat.exists == True"
+
+- name: "Check if 20-nproc.conf exists on RHEL/Centos 7"
+  stat:
+    path: /etc/security/limits.d/20-nproc.conf
+  register: c7nproc
+  when: "prefix_name in group_names and ansible_distribution_major_version|int == 7"
+
+
+- name: "Update 20-nproc.conf on RHEL/Centos 7"
+  blockinfile:
+    dest: /etc/security/limits.d/20-nproc.conf
+    block: |
+      *               hard    nproc           65535
+      *               soft    nproc           65535
+  when: "prefix_name in group_names and ansible_distribution_major_version|int == 7 and c7nproc.stat.exists == True"
+
+
+- name: "Apply kernel configuration"
+  command: sysctl -p
+  when: "prefix_name in group_names"
+
+- name: "Copy rpm to PCE"
+  copy:
+      src: "{{pce_rpm_software}}"
+      dest: /tmp/
+  when: "prefix_name in group_names"
+
+
+- name: "Copy rpm UI to PCE"
+  copy:
+      src: "{{pce_ui_rpm_software}}"
+      dest: /tmp/
+  when: "prefix_name in group_names and pce_ui_rpm_software != ''"
+
+
+- name: "Install PCE rpm - {{pce_rpm_software}}"
+  yum:
+      name: /tmp/{{pce_rpm_software}}
+      state: present
+  when: "prefix_name in group_names"
+
+
+- name: "Install PCE UI rpm - {{pce_ui_rpm_software}}"
+  yum:
+      name: /tmp/{{pce_ui_rpm_software}}
+      state: present
+  when: "prefix_name in group_names and pce_ui_rpm_software != ''"
+
+
+- name: "Clean up RPM package"
+  file:
+      path: "/tmp/{{pce_rpm_software}}"
+      state: absent
+  when: "prefix_name in group_names and pce_rpm_software != ''"
+
+
+- name: "Clean up UI RPM package"
+  file:
+      path: "/tmp/{{pce_ui_rpm_software}}"
+      state: absent
+  when: "prefix_name in group_names and pce_ui_rpm_software != ''"
+
+
+- name: "Copy private key to /var/lib/illumio-pce/cert/"
+  copy:
+      src: "{{machine_private_key}}"
+      dest: /var/lib/illumio-pce/cert/
+      owner: ilo-pce
+      group: ilo-pce
+      mode: 0400
+  when: "prefix_name in group_names"
+
+
+- name: "Copy cert bundle to /var/lib/illumio-pce/cert/"
+  copy:
+      src: "{{machine_cert}}"
+      dest: /var/lib/illumio-pce/cert/
+      owner: ilo-pce
+      group: ilo-pce
+      mode: 0440
+  when: "prefix_name in group_names"
+
+
+- name: "Copy runtime_env.yml template to PCE"
+  template:
+      src: runtime_env.yml.j2
+      dest: /etc/illumio-pce/runtime_env.yml
+      owner: ilo-pce 
+      group: ilo-pce    
+  when: "prefix_name in group_names"
+
+
+- name: "Running illumio-pce-env check before starting cluster"
+  command: illumio-pce-env check
+  become: true
+  become_user: ilo-pce
+  when: "prefix_name in group_names"
+
+
+- name: "Running illumio-pce-ctl status to check runlevel"
+  command: illumio-pce-ctl status -x
+  become: true
+  become_user: ilo-pce
+  register: pce_status
+  failed_when: pce_status.rc > 3
+  when: "prefix_name in group_names"
+  args:
+    chdir: /tmp/
+
+
+- name: "Start PCE"
+  command: illumio-pce-ctl start --runlevel 1
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result == 0
+  failed_when: command_result.rc == 1
+  retries: 0
+  when: "prefix_name in group_names and pce_status.rc == 3"
+  args:
+    chdir: /tmp/
+
+
+- name: "Set PCE to runlevel 1"
+  command: illumio-pce-ctl set-runlevel 1
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result.rc == 1
+  failed_when: command_result.rc == 0
+  ignore_errors: true
+  when: "prefix_name in group_names and pce_status.rc == 0 and node_type in ['core0']"
+  args:
+    chdir: /tmp/
+
+
+- name: "Wait for the pce to start to runlevel 1"
+  command: illumio-pce-ctl status -w 180
+  become: true
+  become_user: ilo-pce
+  register: pce_status2
+  until: pce_status2.rc == 1
+  failed_when: pce_status2.rc > 3
+  retries: 0
+  when: "prefix_name in group_names and (pce_status.rc == 3 or pce_status.rc == 0)"
+  args:
+    chdir: /tmp/
+
+
+- name: "Restart stalled node"
+  command: illumio-pce-ctl restart
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result.rc == 0
+  when: "prefix_name in group_names and (pce_status.rc == 2 or pce_status2.rc|default(0) == 2)"
+  args:
+    chdir: /tmp
+
+
+- name: "Wait for the PCE to start to runlevel 1"
+  command: illumio-pce-ctl status -w 180
+  become: true
+  become_user: ilo-pce
+  register: pce_status2
+  until: pce_status2.rc == 1
+  failed_when: pce_status2.rc > 3
+  retries: 0
+  when: "prefix_name in group_names and (pce_status.rc == 2 or pce_status2.rc|default(0) == 2)"
+  args:
+    chdir: /tmp/
+
+
+- name: "Setting up DB with illumio-pce-db-management"
+  command: illumio-pce-db-management migrate
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result == 0
+  failed_when: command_result == 1
+  retries: 0
+  when: "prefix_name in group_names and node_type in ['data0']"
+  args:
+    chdir: /tmp/
+
+
+- name: "Promoting the PCE to run-level 5"
+  command: illumio-pce-ctl set-runlevel 5
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result.rc == 0
+  failed_when: command_result.rc == 1
+  when: "prefix_name in group_names and node_type in ['core0']"
+  args:
+    chdir: /tmp/
+
+
+- name: "Waiting for PCE to reach run-level 5"
+  command: illumio-pce-ctl status -x
+  become: true
+  become_user: ilo-pce
+  register: pce_status
+  until: pce_status.rc == 0
+  failed_when: pce_status.rc == 3 or 'STOPPED' in pce_status.stdout
+  retries: 0
+  when: "prefix_name in group_names"
+  args:
+    chdir: /tmp/
+
+
+- name: "Waiting for Cluster Status to reach run-level 5"
+  command: illumio-pce-ctl cluster-status -x
+  become: true
+  become_user: ilo-pce
+  register: cluster_status
+  until: cluster_status.rc == 0
+  failed_when: cluster_status.rc > 2
+  retries: 0
+  when: "prefix_name in group_names and node_type in ['core0']"
+  args:
+    chdir: /tmp/
+
+
+- name: "Creating org and adding first user with illumio-pce-db-management"
+  command: illumio-pce-db-management create-domain --user-name {{pce_ui_username}} --full-name '{{pce_ui_fullname}}' --org-name '{{org_name}}'
+  environment:
+    ILO_PASSWORD: "{{pce_ui_password}}"
+  become: true
+  become_user: ilo-pce
+  register: create_domain_result
+  failed_when:
+    create_domain_result.rc != 0 and 'Org already exists' not in create_domain_result.stdout
+  when: "prefix_name in group_names and node_type in ['core0']"
+  args:
+    chdir: /tmp/
+

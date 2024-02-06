@@ -1,0 +1,73 @@
+---
+
+- name: "Check for and install dependencies"
+  yum:
+    state: present
+    name: ["coreutils","findutils","net-tools","procps","gawk","grep","util-linux-ng","sed","sudo","glibc","libgcc","libstdc++","ncurses-libs","zlib"]
+  when: "prefix_name in group_names"
+
+
+- name: "Install tools and required packages"
+  yum: 
+      state: present
+      name: ["postfix","logrotate","libselinux-python","ntp"]
+  when: "prefix_name in group_names"
+
+- name: "Install epel-release for CentOS only"
+  yum: 
+      name: ["epel-release"]
+      state: present
+  ignore_errors: True
+  when: "prefix_name in group_names"
+
+- name: "Stop iptables service (CentOS/RHEL 6)"
+  service:
+    name: iptables
+    state: stopped
+    enabled: false
+  ignore_errors: True
+  when: "prefix_name in group_names and ansible_distribution_major_version|int == 6"
+
+- name: "Stop firewalld service (Centos/RHEL 7)"
+  service:
+    name: firewalld 
+    state: stopped
+    enabled: false
+  ignore_errors: True
+  when: "prefix_name in group_names and ansible_distribution_major_version|int == 7"
+
+- name: "Disable/modify selinux"
+  selinux:
+    state: disabled
+  when: "prefix_name in group_names"
+
+
+- name: "Configure Alias File"
+  blockinfile:
+      dest: /etc/profile.d/global_aliases.sh
+      create: yes
+      block: |
+        # Illumio-specific aliases and functions
+        alias check="sudo -u ilo-pce /opt/illumio-pce/illumio-pce-env check"
+        alias ctl="sudo -u ilo-pce /opt/illumio-pce/illumio-pce-ctl"
+        alias db="sudo -u ilo-pce /opt/illumio-pce/illumio-pce-db-management"
+  when: "prefix_name in group_names"
+
+
+- name: "Copy CA bundle to /etc/pki/ca-trust/source/anchors/"
+  copy:
+      src: ./roles/common/files/{{ root_ca_cert }}
+      dest: /etc/pki/ca-trust/source/anchors/
+      mode: 0400
+  when: "prefix_name in group_names and root_ca_cert != ''"
+
+- name: "update-ca-trust force-enable"
+  command: update-ca-trust force-enable
+  when: "prefix_name in group_names and root_ca_cert != ''"
+
+- name: "update-ca-trust extract"
+  command: update-ca-trust extract
+  when: "prefix_name in group_names and root_ca_cert != ''"
+
+
+

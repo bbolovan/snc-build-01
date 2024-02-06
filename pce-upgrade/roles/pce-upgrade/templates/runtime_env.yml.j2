@@ -1,0 +1,37 @@
+# PCE runtime_env.yml parameters
+install_root: {{install_root}}
+runtime_data_root: {{runtime_data_dir}}
+persistent_data_root: {{persistent_data_dir}}
+ephemeral_data_root: {{ephemeral_data_dir}}
+log_dir: {{log_dir}}
+private_key_cache_dir: {{private_key_cache_dir}}
+node_type: {{node_class}}
+cluster_type: {{cluster_type}}
+web_service_certificate: {{cert_dir}}/{{machine_cert}}
+web_service_private_key: {{cert_dir}}/{{machine_private_key}}
+trusted_ca_bundle: /etc/ssl/certs/ca-bundle.crt
+front_end_https_port: {{ven_port}}
+front_end_management_https_port: {{mgmt_port}}
+front_end_event_service_port: {{ven_lightning_port}}
+pce_fqdn: {{pce_fqdn_name}}.{{pce_domain_name}}
+service_discovery_fqdn: {{service_discovery_server}}.{{pce_domain_name}}
+service_discovery_encryption_key: {{service_discovery_encryption_key}}
+email_address: noreply@{{prefix_name}}.{{pce_domain_name}}
+email_display_name: noreply@{{prefix_name}}
+smtp_relay_address: 127.0.0.1:25
+expose_user_invitation_link: true
+syslog_event_export_format: json
+cluster_public_ips:
+  cluster_fqdn:
+{% for ip in hostvars[inventory_hostname]['groups']['corenodes'] %}
+{% if ip in hostvars[inventory_hostname]['groups'][prefix_name] %}
+  - {{ip}}
+{% endif %}
+{% endfor %}
+{% if load_balancer_ip %}
+  - {{load_balancer_ip}}
+{% endif %}
+export_flow_summaries_to_syslog:
+  - accepted
+  - potentially_blocked
+  - blocked

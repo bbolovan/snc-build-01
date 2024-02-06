@@ -1,0 +1,92 @@
+---
+#
+###      Copyright 2013-2016 Illumio, Inc. All Rights Reserved.localhost
+#
+# Ansible playbook that build SNC, MNC or Multu-region PCE inside AWS.....
+#
+# site.yml is the primary playbook that will call other roles: aws, common, and snc/mnc/multi-region.  
+# using the ec2 modules that reqiuire the boto python module to work.
+# 
+# Because the hosts have not been built the site.yml doesnt not require a host file.  It calls the local machine running the playbook.
+# 
+# This playbook only creates the AWS instances.  There is a aws-delete.yml that will scan AWS for any of the created environments and delete them.  
+# This requires the ec2.py python script.  Go here to download the script: https://raw.githubusercontent.com/ansible/ansible/devel/contrib/inventory/ec2.py  
+# In addition the ec2.ini is required: https://raw.githubusercontent.com/ansible/ansible/devel/contrib/inventory/ec2.ini.  
+#
+
+# After boto is installed there should be in your home directory .aws/  The directory should contain credentials and config.  ~/.aws/config and ~/.aws/credentials
+#  The format should be as follows:
+#
+#
+# [default]
+# aws_access_key_id = <AWS USER KEY>
+# aws_secret_access_key = <AWS USER KEY SECRET>
+
+# Inside the ~/.aws/config you should place the region you want to be used by the ec2.py as the default AWS region
+# [default]
+# region=us-east-2
+# output=json
+#
+#########################################################################################
+- hosts: pce
+  max_fail_percentage: 10
+  become: true
+  tasks:
+
+  - name: "set fact variable - node type"
+    set_fact:   
+      node_type : "{{item}}"
+    when: (item in ["core0","core1","core2","core3","data0","data1"])
+    with_items: "{{hostvars[inventory_hostname]['group_names']}}"
+
+  - name: "Set fact variable - node class"
+    set_fact:
+      node_class: "core"
+    when: (item in ["core0","core1","core2","core3"])
+    with_items: "{{hostvars[inventory_hostname]['group_names']}}"
+
+  - name: "Set fact variable - node class"
+    set_fact:
+      node_class: "{{item}}"
+    when: (item in ["data0","data1"])
+    with_items: "{{hostvars[inventory_hostname]['group_names']}}"
+
+  - name: "Checking PCE cluster makeup for type definition"
+    run_once: true
+    set_fact:
+      node_count: "{{ groups[prefix_name] |length }}"
+
+  - name: "Set cluster type 2x2 based on group membership counts"
+    set_fact:
+      cluster_type: "4node_v0"
+    run_once: true
+    when: node_count == '4'
+
+  - name: "Set cluster type as 4x2 based on group membership counts"
+    set_fact:
+      cluster_type: "6node_v0"
+    run_once: true
+    when: node_count == '6'
+
+  - name: "Set cluster type SNC based on group membership counts"
+    set_fact:
+      cluster_type: "snc0"
+    run_once: true
+    when: node_count == '1'
+
+
+  - name: "Set fact variable - target PCE version"
+    set_fact:
+      target_version: "{{ pce_rpm_software | regex_replace('illumio-pce-([0-9]{2}\\.[0-9]\\.[0-9]).*$', '\\1') }}"
+
+
+- name: "Running UPGRADE task on {{prefix_name}}"
+  hosts: "{{prefix_name}}"
+  max_fail_percentage: 10
+  gather_facts: False
+  become: true
+
+  roles: 
+    - role: pce-upgrade-prepare
+    - role: pce-upgrade
+

@@ -1,0 +1,62 @@
+---
+
+# Removes hardening from the PCE nodes to protect PCE related services
+
+
+- name: "Prevent firewalld from getting loaded"
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+    masked: no
+  when: "prefix_name in group_names"
+
+
+- name: "Enable iptables"
+  systemd:
+    name: "iptables"
+    state: stopped
+    enabled: no
+  when: "prefix_name in group_names"
+
+
+- name: "Check for current IPTables Config"
+  stat: 
+    path: /etc/sysconfig/iptables
+  register: ipt_stat
+  when: "prefix_name in group_names"
+
+
+- name: "Check for initial IPTables pipgen backup"
+  stat:
+    path: /etc/sysconfig/iptables.pipgen.orig
+  register: ipt_pipgen_stat
+  when: "prefix_name in group_names"
+
+
+- name: "Backup the active IPTables Config"
+  command: mv /etc/sysconfig/iptables /etc/sysconfig/iptables.pipgen.uninstall
+  when: "prefix_name in group_names and ipt_stat.stat.exists and ipt_pipgen_stat.stat.exists"
+
+
+- name: "Restore the backed up IPTables Config"
+  command: mv /etc/sysconfig/iptables.pipgen.orig /etc/sysconfig/iptables
+  when: "prefix_name in group_names and ipt_stat.stat.exists and ipt_pipgen_stat.stat.exists"
+
+
+- name: "Stop the IPSec daemon"
+  systemd:
+    name: ipsec
+    state: stopped
+    enabled: no
+  when: "prefix_name in group_names"
+
+
+- name: "Clean up illumio-vpngen config"
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+   - /etc/ipsec.d/pce_vpn.conf
+   - /etc/ipsec.d/pce_vpn.secrets
+  when: "prefix_name in group_names"

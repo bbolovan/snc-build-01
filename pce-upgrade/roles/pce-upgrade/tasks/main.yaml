@@ -1,0 +1,144 @@
+---
+
+- name: "Running illumio-pce-ctl status to check PCE is stopped"
+  command: illumio-pce-ctl status
+  become: true
+  become_user: ilo-pce
+  register: pce_status
+  failed_when: pce_status.rc != 0
+  args:
+    chdir: /tmp/
+  when: "prefix_name in group_names"
+
+
+- name: "Upgrade PCE rpm on Data nodes"
+  yum:
+      name: 
+       - "/tmp/{{pce_rpm_software}}"
+      state: latest
+  when: "prefix_name in group_names and 'datanodes' in group_names"
+
+
+- name: "Upgrade PCE and UI RPMs on Core Nodes"
+  yum:
+      name:
+       - "/tmp/{{pce_rpm_software}}"
+       - "/tmp/{{pce_ui_rpm_software}}"
+      state: latest
+  when: "prefix_name in group_names and 'corenodes' in group_names"
+
+
+- name: "Clean up RPM package"
+  file:
+      path: "/tmp/{{pce_rpm_software}}"
+      state: absent
+  when: "prefix_name in group_names and pce_rpm_software != ''"
+
+
+- name: "Clean up UI RPM package"
+  file:
+      path: "/tmp/{{pce_ui_rpm_software}}"
+      state: absent
+  when: "prefix_name in group_names and pce_ui_rpm_software != ''"
+
+
+- name: "Copy runtime_env.yml template to PCE"
+  template:
+      src: runtime_env.yml.j2
+      dest: /etc/illumio-pce/runtime_env.yml
+      owner: ilo-pce
+      group: ilo-pce
+  when: "prefix_name in group_names"
+
+
+- name: "Running illumio-pce-env check before starting cluster"
+  command: illumio-pce-env check
+  become: true
+  become_user: ilo-pce
+  when: "prefix_name in group_names"
+
+
+- name: "Start PCE to runlevel 1 and perform any DB upgrade required"
+  command: illumio-pce-ctl start -d --yes-to-db-upgrade --runlevel 1
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result.rc == 0
+  failed_when: command_result.rc != 0
+  retries: 0
+  when: "prefix_name in group_names"
+  args:
+    chdir: /tmp/
+
+
+- name: "Wait for the PCE to start to runlevel 1"
+  command: illumio-pce-ctl status -w 180
+  become: true
+  become_user: ilo-pce
+  register: pce_status
+  until: pce_status.rc == 1
+  failed_when: pce_status.rc > 3
+  retries: 0
+  when: "prefix_name in group_names and command_result.rc == 0"
+  args:
+    chdir: /tmp/
+
+
+- name: "Restart stalled node"
+  command: illumio-pce-ctl restart
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result.rc == 1
+  when: "prefix_name in group_names and pce_status.rc == 2"
+  args:
+    chdir: /tmp
+
+
+- name: "Performing DB schema migration"
+  command: illumio-pce-db-management migrate
+  become: true
+  become_user: ilo-pce
+  when: "prefix_name in group_names and  node_type in ['data0']"
+  args:
+    chdir: /tmp/
+
+
+- name: "Promoting the PCE to run-level 5"
+  command: illumio-pce-ctl set-runlevel 5
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result.rc == 0
+  failed_when: command_result.rc > 3
+  when: "prefix_name in group_names and node_type in ['core0']"
+  args:
+    chdir: /tmp/
+
+
+- name: "Waiting for PCE to reach run-level 5"
+  command: illumio-pce-ctl status -x
+  become: true
+  become_user: ilo-pce
+  register: pce_status
+  until: pce_status.rc == 0
+  failed_when: pce_status.rc == 3 or 'STOPPED' in pce_status.stdout
+  retries: 0
+  when: "prefix_name in group_names"
+  args:
+    chdir: /tmp/
+
+
+- name: "Waiting for Cluster Status to reach run-level 5"
+  command: illumio-pce-ctl cluster-status -x
+  become: true
+  become_user: ilo-pce
+  register: cluster_status
+  until: cluster_status.rc == 0
+  failed_when: cluster_status.rc > 2
+  retries: 0
+  when: "prefix_name in group_names and node_type in ['core0']"
+  args:
+    chdir: /tmp/
+
+

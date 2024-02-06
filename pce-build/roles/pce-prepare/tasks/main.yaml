@@ -1,0 +1,116 @@
+---
+- name: Login with Username and Password
+  uri:
+    url: "https://{{prefix_name}}.{{pce_domain_name}}:{{mgmt_port}}/api/v2/login_users/authenticate?pce_fqdn={{prefix_name}}.{{pce_domain_name}}"
+    method: POST
+    headers:
+      Content-Type: "application/json"
+    user: "{{pce_ui_username}}"
+    password: "{{pce_ui_password}}"
+    force_basic_auth: yes
+    status_code: 201
+    body_format: json
+  register: login_data
+  until: login_data.status == 201
+  retries: 5
+  delay: 15
+  when: "prefix_name in group_names and node_type in ['core0']"
+
+# - debug: 
+#     var: login_data
+
+- name: Get Session Key
+  uri:
+    url: "https://{{prefix_name}}.{{pce_domain_name}}:{{mgmt_port}}/api/v2/users/login"
+    method: GET
+    headers:
+      Accept: "application/json"
+      Authorization: Token token={{login_data.json.auth_token}}
+    status_code: 200
+    body_format: json
+  register: session_data
+  until: session_data.status == 200
+  retries: 5
+  delay: 15
+  when: "prefix_name in group_names and node_type in ['core0']"
+  # ignore_errors: true
+
+# - debug: 
+#     var: session_data
+
+- name: Deleting Default ruleset
+  uri:
+    url: "https://{{prefix_name}}.{{pce_domain_name}}:{{mgmt_port}}/api/v2{{session_data.json.orgs[0].org_href}}/sec_policy/draft/rule_sets/delete"
+    method: PUT
+    body: '{"rule_sets":[{"href":"{{session_data.json.orgs[0].org_href}}/sec_policy/draft/rule_sets/1"}]}'
+    headers:
+      Accept: "application/json"
+      Content-Type: "application/json"
+    status_code: 204
+    body_format: json
+    force_basic_auth: yes
+    user: "{{session_data.json.auth_username}}"
+    password: "{{session_data.json.session_token}}"
+  when: "prefix_name in group_names and node_type in ['core0']"
+
+- name: Provision Disabling Default ruleset
+  uri:
+    url: "https://{{prefix_name}}.{{pce_domain_name}}:{{mgmt_port}}/api/v2{{session_data.json.orgs[0].org_href}}/sec_policy"
+    method: POST
+    body: '{"update_description":"Ansible deleting default ruleset","change_subset":{"rule_sets":[{"href":"{{session_data.json.orgs[0].org_href}}/sec_policy/draft/rule_sets/1"}]}}'
+    headers:
+      Accept: "application/json"
+      Content-Type: "application/json"
+    status_code: 201
+    body_format: json
+    force_basic_auth: yes
+    user: "{{session_data.json.auth_username}}"
+    password: "{{session_data.json.session_token}}"
+  when: "prefix_name in group_names and node_type in ['core0']"
+
+- name: Disabling IPv6 Traffic
+  uri:
+    url: "https://{{prefix_name}}.{{pce_domain_name}}:{{mgmt_port}}/api/v2{{session_data.json.orgs[0].org_href}}/sec_policy/draft/firewall_settings"
+    method: PUT
+    body: '{"allow_ipv6":false}'
+    headers:
+      Accept: "application/json"
+      Content-Type: "application/json"
+    status_code: 204
+    body_format: json
+    force_basic_auth: yes
+    user: "{{session_data.json.auth_username}}"
+    password: "{{session_data.json.session_token}}"
+  when: "prefix_name in group_names and node_type in ['core0']"
+
+
+- name: Provision Disabling IPv6
+  uri:
+    url: "https://{{prefix_name}}.{{pce_domain_name}}:{{mgmt_port}}/api/v2{{session_data.json.orgs[0].org_href}}/sec_policy"
+    method: POST
+    body: '{"update_description":"Disable IPv6","change_subset":{"firewall_settings":[{"href":"{{session_data.json.orgs[0].org_href}}/sec_policy/draft/firewall_settings"}]}}'
+    headers:
+      Accept: "application/json"
+      Content-Type: "application/json"
+    status_code: 201
+    body_format: json
+    force_basic_auth: yes
+    user: "{{session_data.json.auth_username}}"
+    password: "{{session_data.json.session_token}}"
+  when: "prefix_name in group_names and node_type in ['core0']"
+
+- name: Deleting Predefined Labels
+  uri:
+    url: "https://{{prefix_name}}.{{pce_domain_name}}:{{mgmt_port}}/api/v2{{session_data.json.orgs[0].org_href}}/labels/delete"
+    method: PUT
+    body: '{"labels":[{"href":"/orgs/1/labels/1"},{"href":"/orgs/1/labels/2"},{"href":"/orgs/1/labels/3"},{"href":"/orgs/1/labels/4"},{"href":"/orgs/1/labels/5"},{"href":"/orgs/1/labels/6"},{"href":"/orgs/1/labels/7"},{"href":"/orgs/1/labels/8"},{"href":"/orgs/1/labels/9"},{"href":"/orgs/1/labels/10"},{"href":"/orgs/1/labels/11"},{"href":"/orgs/1/labels/12"},{"href":"/orgs/1/labels/13"}]}'
+    headers:
+      Accept: "application/json"
+    status_code: 204
+    body_format: json
+    force_basic_auth: yes
+    user: "{{session_data.json.auth_username}}"
+    password: "{{session_data.json.session_token}}"
+  ignore_errors: true
+  when: "prefix_name in group_names and node_type in ['core0']"
+

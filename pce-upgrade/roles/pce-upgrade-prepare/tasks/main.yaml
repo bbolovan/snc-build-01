@@ -1,0 +1,117 @@
+---
+
+- name: "Get the RPM facts for Illumio"
+  yum: 
+    list: "illumio-pce"
+  register: yum_result
+  when: "prefix_name in group_names"
+
+#- debug:
+#    msg: "{{yum_result.results[0].envra}} Installed, {{target_version}} targeted"
+
+- name: "Check if there is a newer PCE Installed"
+  fail:
+    msg: "Existing {{yum_result.results[0].envra}} is the same or newer than {{pce_rpm_software}}"
+  when: "prefix_name in group_names and yum_result.results[0].version >= target_version"
+
+
+- name: "Configure Kernel Parameters"
+  blockinfile:
+      dest: /etc/sysctl.conf
+      block: | 
+        kernel.shmmax = 60000000
+        vm.overcommit_memory = 1
+        fs.file-max = 100000
+        net.core.somaxconn = 16384
+  when: "prefix_name in group_names"
+
+- name: "Update Data node limits"
+  blockinfile:
+    dest: /etc/security/limits.conf
+    block: |
+      *               soft    core            unlimited
+      *               hard    core            unlimited
+  #when: node_type in ['data0','data1']
+  when: "prefix_name in group_names and 'datanodes' in group_names"
+
+- name: "Update Core node limits"
+  blockinfile:
+    dest: /etc/security/limits.conf
+    block: |
+      *               soft    core            unlimited
+      *               hard    core            unlimited
+      *               hard    nproc           65535
+      *               soft    nproc           65535
+      *               hard    nofile          65535
+      *               soft    nofile          65535
+  #when: node_type in ['core0','core1','snc0']
+  when: "prefix_name in group_names and 'corenodes' in group_names"
+
+- name: "Check if 90-nproc.conf exists on RHEL/Centos 6"
+  stat:
+    path: /etc/security/limits.d/90-nproc.conf
+  register: c6nproc
+  when: "prefix_name in group_names and ansible_distribution_major_version|int == 6"
+
+- name: "Update 90-nproc.conf on RHEL/Centos 6"
+  blockinfile:
+    dest: /etc/security/limits.d/90-nproc.conf
+    block: |
+      *               hard    nproc           65535
+      *               soft    nproc           65535
+  when: "prefix_name in group_names and ansible_distribution_major_version|int == 6 and 'pce' in group_names and c6nproc.stat.exists == True"
+
+- name: "Check if 20-nproc.conf exists on RHEL/Centos 7"
+  stat:
+    path: /etc/security/limits.d/20-nproc.conf
+  register: c7nproc
+  when: "prefix_name in group_names and ansible_distribution_major_version|int == 7"
+
+
+- name: "Update 20-nproc.conf on RHEL/Centos 7"
+  blockinfile:
+    dest: /etc/security/limits.d/20-nproc.conf
+    block: |
+      *               hard    nproc           65535
+      *               soft    nproc           65535
+  when: "prefix_name in group_names and ansible_distribution_major_version|int == 7 and c7nproc.stat.exists == True"
+
+
+- name: "Apply kernel configuration"
+  command: sysctl -p
+  when: "prefix_name in group_names"
+
+
+- name: "Copy rpm to PCE"
+  copy:
+      src: "{{pce_rpm_software}}"
+      dest: /tmp/
+  when: "prefix_name in group_names"
+
+
+- name: "Copy rpm UI to PCE"
+  copy:
+      src: "{{pce_ui_rpm_software}}"
+      dest: /tmp/
+  when: "prefix_name in group_names and 'corenodes' in group_names and pce_ui_rpm_software != ''"
+
+
+- name: "Take a backup of the PCE Data nodes"
+  become: true
+  become_user: ilo-pce
+  shell: 'current=$(date +\%s);modified=$(stat -c "%Y" {{persistent_data_dir}}/redis/redis_traffic_0_master.rdb);if [ $? == "1" ];then modified=0;fi;if [ $(($current-$modified)) -gt 1800 ];then redis="redis-slave";else redis="redis-master";fi;filename="{{backup_location}}{{yum_result.results[0].version}}_db_backup_$(date +\%Y\%m\%d)-${redis}.dump";illumio-pce-db-management dump --file "${filename}"'
+  when: "prefix_name in group_names and 'datanodes' in group_names"
+  args:
+    chdir: "{{backup_location}}"
+
+
+- name: "Stop PCE ready for upgrade"
+  command: illumio-pce-ctl stop
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  failed_when: command_result.rc == 1
+  when: "prefix_name in group_names"
+  args:
+    chdir: /tmp/
+ 
