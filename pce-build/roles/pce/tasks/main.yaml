@@ -101,15 +101,18 @@
 #    when: "prefix_name in group_names"
 
 
-- name: Ignore warnings and install RPM using rpm command
+- name:  "Install PCE  rpm - {{pce_rpm_software}}"
   shell: rpm -ivh /tmp/{{pce_rpm_software}}
   args:
     warn: false
+state: present
+when: "prefix_name in group_names and pce_rpm_software != ''"
 
 - name: "Install PCE UI rpm - {{pce_ui_rpm_software}}"
-  yum:
-      name: /tmp/{{pce_ui_rpm_software}}
-      state: present
+  shell: rpm -ivh /tmp/{{pce_ui_rpm_software}}
+  args:
+    warn: false
+  state: present
   when: "prefix_name in group_names and pce_ui_rpm_software != ''"
 
 
