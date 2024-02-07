@@ -113,7 +113,7 @@
 #   when: "prefix_name in group_names" 
 
 
- - name: "Restart IP Tables and apply pipgen firewall"
+- name: "Restart IP Tables and apply pipgen firewall"
    systemd:
      name: iptables
      state: restarted
