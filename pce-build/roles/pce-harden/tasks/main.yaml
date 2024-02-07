@@ -113,11 +113,11 @@
 #   when: "prefix_name in group_names" 
 
 
-- name: "Restart IP Tables and apply pipgen firewall"
-   systemd:
-     name: iptables
-     state: restarted
-   when: "prefix_name in group_names"
+#- name: "Restart IP Tables and apply pipgen firewall"
+#   systemd:
+#     name: iptables
+#     state: restarted
+#   when: "prefix_name in group_names"
 
 
 # - name: "Dependancy check for ilo-vpngen"
@@ -145,8 +145,6 @@
 #     state: present
 #     name: /tmp/libreswan-3.29-1.el7.x86_64.rpm
 #   when: "prefix_name in group_names"
-
-
 # - name: "Clean up RPM package"
 #   file:
 #       path: /tmp/libreswan-3.29-1.el7.x86_64.rpm
