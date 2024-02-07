@@ -2,11 +2,11 @@
 
 # Applies hardening to the PCE nodes to protect PCE related services
 
-- name: "Install IPTables if required"
-  yum:
-    state: latest
-    name: ["iptables","iptables-services"]
-  when: "prefix_name in group_names"
+#- name: "Install IPTables if required"
+#  yum:
+#    state: latest
+#    name: ["iptables","iptables-services"]
+#  when: "prefix_name in group_names"
 
 
 - name: "Prevent firewalld from getting loaded"
