@@ -81,16 +81,16 @@
 #               hosts:
 #                 192.168.50.229:
 #                 192.168.50.239:
-[pce:children]
-snc1
+#[pce:children]
+#snc1
 #mnc13
 #mnc14
-[snc1:children]
-sncnodes
-[sncnodes:children]
-snc0
-[snc0]
-172.22.91.81
+#[snc1:children]
+#sncnodes
+#[sncnodes:children]
+#snc0
+#[snc0]
+#172.22.91.81
 
 #[mnc13:children]
 #corenodes
