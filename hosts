@@ -41,56 +41,72 @@
 # leading 0s:
 
 ## db-[99:101]-node.example.com
+ 
+ all:
+   hosts:
+   children:
+     pce:
+       children:
+          snc1:
+            hosts:
+              172.22.91.81:
+#         mnc13:
+#           hosts:
+#             192.168.50.226:
+#             192.168.50.227:
+#             192.168.50.228:
+#             192.168.50.229:
+#         mnc14:
+#           hosts:
+#             192.168.50.234:
+#             192.168.50.235:
+#             192.168.50.236:
+#             192.168.50.237:
+#             192.168.50.238:
+#             192.168.50.239:
+         sncnodes:
+           children:
+              snc0:
+                hosts:
+                  172.22.91.81:
+#         corenodes:
+#           children:
+#             core0:
+#               hosts:
+#                 192.168.50.226:
+#                 192.168.50.234:
+#             core1:
+#               hosts:
+#                 192.168.50.227:
+#                 192.168.50.235:
+#             core2:
+#               hosts:
+#                 192.168.50.236:
+#             core3:
+#               hosts:
+#                 192.168.50.237:
+#         datanodes:
+#           children:
+#             data0:
+#               hosts:
+#                 192.168.50.228:
+#                 192.168.50.238:
+#             data1:
+#               hosts:
+#                 192.168.50.229:
+#                 192.168.50.239:
 
-all:
-  hosts:
-  children:
-    pce:
-      children:
-        mnc13:
-          hosts:
-            192.168.50.226:
-            192.168.50.227:
-            192.168.50.228:
-            192.168.50.229:
-        mnc14:
-          hosts:
-            192.168.50.234:
-            192.168.50.235:
-            192.168.50.236:
-            192.168.50.237:
-            192.168.50.238:
-            192.168.50.239:
-        corenodes:
-          children:
-            core0:
-              hosts:
-                192.168.50.226:
-                192.168.50.234:
-            core1:
-              hosts:
-                192.168.50.227:
-                192.168.50.235:
-            core2:
-              hosts:
-                192.168.50.236:
-            core3:
-              hosts:
-                192.168.50.237:
-        datanodes:
-          children:
-            data0:
-              hosts:
-                192.168.50.228:
-                192.168.50.238:
-            data1:
-              hosts:
-                192.168.50.229:
-                192.168.50.239:
-
-#[pce:children]
+[pce:children]
+snc1
 #mnc13
 #mnc14
+
+[snc1:children]
+sncnodes
+[sncnodes:children]
+snc0
+[snc0]
+172.22.91.81
 
 #[mnc13:children]
 #corenodes

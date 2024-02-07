@@ -37,25 +37,19 @@
   - name: "set fact variable - node type"
     set_fact:   
       node_type : "{{item}}"
-    when: "(item in ['core0','core1','core2','core3','data0','data1'])"
+    when: "(item in ['snc0'])"
     with_items: "{{hostvars[inventory_hostname]['group_names']}}"
 
   - name: "set fact variable - PCE name"
     set_fact:
       pce_name: "{{item}}"
-    when: "item in ['mnc13','mnc14']"
+    when: "item in ['snc1']"
     with_items: "{{hostvars[inventory_hostname]['group_names']}}"
 
-  - name: "Set fact variable - node class 'core'"
+  - name: "Set fact variable - node class 'snc0'"
     set_fact:
-      node_class: "core"
-    when: (item in ["core0","core1","core2","core3"])
-    with_items: "{{hostvars[inventory_hostname]['group_names']}}"
-
-  - name: "Set fact variable - node class 'data'"
-    set_fact:
-      node_class: "{{item}}"
-    when: (item in ["data0","data1"])
+      node_class: "snc0"
+    when: (item in ["snc0"])
     with_items: "{{hostvars[inventory_hostname]['group_names']}}"
 
   - name: "Checking PCE cluster makeup for type definition"
