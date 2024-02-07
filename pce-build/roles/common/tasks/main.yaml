@@ -13,12 +13,12 @@
       name: ["postfix","logrotate"]
   when: "prefix_name in group_names"
 
-- name: "Install epel-release for CentOS only"
-  yum: 
-      name: ["epel-release"]
-      state: present
-  ignore_errors: True
-  when: "prefix_name in group_names"
+# - name: "Install epel-release for CentOS only"
+#   yum: 
+#       name: ["epel-release"]
+#       state: present
+#   ignore_errors: True
+#   when: "prefix_name in group_names"
 
 - name: "Stop iptables service (CentOS/RHEL 6)"
   service:
