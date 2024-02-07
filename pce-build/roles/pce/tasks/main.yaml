@@ -244,7 +244,7 @@
   until: command_result == 0
   failed_when: command_result == 1
   retries: 0
-  when: "prefix_name in group_names and node_type in ['data0']"
+  when: "prefix_name in group_names and node_type in ['snc0']"
   args:
     chdir: /tmp/
 
@@ -256,7 +256,7 @@
   register: command_result
   until: command_result.rc == 0
   failed_when: command_result.rc == 1
-  when: "prefix_name in group_names and node_type in ['core0']"
+  when: "prefix_name in group_names and node_type in ['snc0']"
   args:
     chdir: /tmp/
 
@@ -282,7 +282,7 @@
   until: cluster_status.rc == 0
   failed_when: cluster_status.rc > 2
   retries: 0
-  when: "prefix_name in group_names and node_type in ['core0']"
+  when: "prefix_name in group_names and node_type in ['snc0']"
   args:
     chdir: /tmp/
 
@@ -296,7 +296,7 @@
   register: create_domain_result
   failed_when:
     create_domain_result.rc != 0 and 'Org already exists' not in create_domain_result.stdout
-  when: "prefix_name in group_names and node_type in ['core0']"
+  when: "prefix_name in group_names and node_type in ['snc0']"
   args:
     chdir: /tmp/
 
