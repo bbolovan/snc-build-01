@@ -100,12 +100,11 @@
 #        state: present
 #    when: "prefix_name in group_names"
 
-- name: Install RPM from local file
-      shell: |
-        yum install -y /tmp/{{pce_rpm_software}}
-      args:
-        warn: false
-        executable: /usr/bin/bash
+
+- name: Ignore warnings and install RPM using rpm command
+  shell: rpm -ivh /tmp/{{pce_rpm_software}} --ignore-warnings
+  args:
+    warn: false
 
 - name: "Install PCE UI rpm - {{pce_ui_rpm_software}}"
   yum:
