@@ -13,7 +13,7 @@
     "root_ca_cert" : "ca.bb.local.crt",
     "service_discovery_encryption_key" : "OznXCAd5gkkTNXkvgith0RdiNdWGshQvzNgJMEqH6qE=",
     "pce_fqdn_name" : "sc-pce3",
-    "load_balancer_ip" : "172.22.91.81",
+    "load_balancer_ip" : "172.22.91.89",
     "service_discovery_server" : "sc-pce3-core0",
     "prefix_name" : "snc1",
     "pce_domain_name" : "bb.local",

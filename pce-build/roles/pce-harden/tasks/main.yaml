@@ -26,33 +26,33 @@
   when: "prefix_name in group_names"
 
 
-# - name: "Create the working directory"
-#   file:
-#     path: /var/tmp/illumio-pipgen
-#     state: directory
-#   when: "prefix_name in group_names"
+ - name: "Create the working directory"
+   file:
+     path: /var/tmp/illumio-pipgen
+     state: directory
+   when: "prefix_name in group_names"
 
 
-# - name: "Copy illumio-pipgen to the PCE nodes"
-#   copy:
-#     src: ilo-pipgen
-#     dest: /var/tmp/illumio-pipgen/
-#     mode: 0755
-#   when: "prefix_name in group_names"
+ - name: "Copy illumio-pipgen to the PCE nodes"
+   copy:
+     src: ilo-pipgen
+     dest: /var/tmp/illumio-pipgen/
+     mode: 0755
+   when: "prefix_name in group_names"
 
 
-# - name: "Create pipgen IP file"
-#   template: 
-#     src: ip_addr_input.txt
-#     dest: /var/tmp/illumio-pipgen/
-#   when: "prefix_name in group_names"
+ - name: "Create pipgen IP file"
+   template: 
+     src: ip_addr_input.txt
+     dest: /var/tmp/illumio-pipgen/
+   when: "prefix_name in group_names"
 
 
-# - name: "Run pipgen"
-#   shell: "./ilo-pipgen -i ip_addr_input.txt -o iptables -p {{ven_port}},{{ven_lightning_port}},{{mgmt_port}}"
-#   args:
-#     chdir: /var/tmp/illumio-pipgen/
-#   when: "prefix_name in group_names"
+ - name: "Run pipgen"
+   shell: "./ilo-pipgen -i ip_addr_input.txt -o iptables -p {{ven_port}},{{ven_lightning_port}},{{mgmt_port}}"
+   args:
+     chdir: /var/tmp/illumio-pipgen/
+   when: "prefix_name in group_names"
 
 
 - name: "Enable conntrack in modprobe"
@@ -89,35 +89,35 @@
   when: "prefix_name in group_names"
 
 
-#- name: "Check for initial IPTables pipgen backup"
-#  stat:
-#    path: /etc/sysconfig/iptables.pipgen.orig
-#  register: ipt_pipgen_stat
-#  when: "prefix_name in group_names"
+- name: "Check for initial IPTables pipgen backup"
+  stat:
+    path: /etc/sysconfig/iptables.pipgen.orig
+  register: ipt_pipgen_stat
+  when: "prefix_name in group_names"
 
 
-#- name: "Backup original IPTables Config"
-#  command: mv /etc/sysconfig/iptables /etc/sysconfig/iptables.pipgen.orig
-#  when: "prefix_name in group_names and ipt_stat.stat.exists and ipt_pipgen_stat.stat.exists == false"
+- name: "Backup original IPTables Config"
+  command: mv /etc/sysconfig/iptables /etc/sysconfig/iptables.pipgen.orig
+  when: "prefix_name in group_names and ipt_stat.stat.exists and ipt_pipgen_stat.stat.exists == false"
 
 
-#- name: "Insert pipgen firewall"
-#  command: cp /var/tmp/illumio-pipgen/iptables /etc/sysconfig/iptables
-#  when: "prefix_name in group_names"
+- name: "Insert pipgen firewall"
+  command: cp /var/tmp/illumio-pipgen/iptables /etc/sysconfig/iptables
+  when: "prefix_name in group_names"
 
 
-# - name: "Clean up pipgen temp directory"
-#   file:
-#     path: /var/tmp/illumio-pipgen/
-#     state: absent
-#   when: "prefix_name in group_names" 
+ - name: "Clean up pipgen temp directory"
+   file:
+     path: /var/tmp/illumio-pipgen/
+     state: absent
+   when: "prefix_name in group_names" 
 
 
-#- name: "Restart IP Tables and apply pipgen firewall"
-#   systemd:
-#     name: iptables
-#     state: restarted
-#   when: "prefix_name in group_names"
+- name: "Restart IP Tables and apply pipgen firewall"
+   systemd:
+     name: iptables
+     state: restarted
+   when: "prefix_name in group_names"
 
 
 # - name: "Dependancy check for ilo-vpngen"
