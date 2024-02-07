@@ -26,26 +26,26 @@
   when: "prefix_name in group_names"
 
 
- - name: "Create the working directory"
-   file:
-     path: /var/tmp/illumio-pipgen
-     state: directory
-   when: "prefix_name in group_names"
+- name: "Create the working directory"
+  file:
+    path: /var/tmp/illumio-pipgen
+    state: directory
+  when: "prefix_name in group_names"
 
 
- - name: "Copy illumio-pipgen to the PCE nodes"
-   copy:
-     src: ilo-pipgen
-     dest: /var/tmp/illumio-pipgen/
-     mode: 0755
-   when: "prefix_name in group_names"
+- name: "Copy illumio-pipgen to the PCE nodes"
+  copy:
+    src: ilo-pipgen
+    dest: /var/tmp/illumio-pipgen/
+    mode: 0755
+  when: "prefix_name in group_names"
 
 
- - name: "Create pipgen IP file"
-   template: 
-     src: ip_addr_input.txt
-     dest: /var/tmp/illumio-pipgen/
-   when: "prefix_name in group_names"
+- name: "Create pipgen IP file"
+  template: 
+    src: ip_addr_input.txt
+    dest: /var/tmp/illumio-pipgen/
+  when: "prefix_name in group_names"
 
 
  - name: "Run pipgen"
