@@ -102,7 +102,7 @@
 
 
 - name: Ignore warnings and install RPM using rpm command
-  shell: rpm -ivh /tmp/{{pce_rpm_software}} --ignore-warnings
+  shell: rpm -ivh /tmp/{{pce_rpm_software}}
   args:
     warn: false
 
