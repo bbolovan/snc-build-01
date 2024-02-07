@@ -110,8 +110,6 @@
   shell: rpm -ivh /tmp/{{pce_ui_rpm_software}}
   args:
     warn: false
-  state: present
-  when: "prefix_name in group_names and pce_ui_rpm_software != ''"
 
 
 - name: "Clean up RPM package"
