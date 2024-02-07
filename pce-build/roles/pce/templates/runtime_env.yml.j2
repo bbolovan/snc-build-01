@@ -23,7 +23,7 @@ expose_user_invitation_link: true
 syslog_event_export_format: json
 cluster_public_ips:
   cluster_fqdn:
-{% for ip in hostvars[inventory_hostname]['groups']['corenodes'] %}
+{% for ip in hostvars[inventory_hostname]['groups']['snc1'] %}
 {% if ip in hostvars[inventory_hostname]['groups'][prefix_name] %}
   - {{ip}}
 {% endif %}
