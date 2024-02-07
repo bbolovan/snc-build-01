@@ -10,7 +10,7 @@
 - name: "Install tools and required packages"
   yum: 
       state: present
-      name: ["postfix","logrotate","libselinux-python"]
+      name: ["postfix","logrotate"]
   when: "prefix_name in group_names"
 
 - name: "Install epel-release for CentOS only"
