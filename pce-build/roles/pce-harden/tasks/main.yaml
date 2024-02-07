@@ -48,11 +48,11 @@
   when: "prefix_name in group_names"
 
 
- - name: "Run pipgen"
-   shell: "./ilo-pipgen -i ip_addr_input.txt -o iptables -p {{ven_port}},{{ven_lightning_port}},{{mgmt_port}}"
-   args:
-     chdir: /var/tmp/illumio-pipgen/
-   when: "prefix_name in group_names"
+- name: "Run pipgen"
+  shell: "./ilo-pipgen -i ip_addr_input.txt -o iptables -p {{ven_port}},{{ven_lightning_port}},{{mgmt_port}}"
+  args:
+    chdir: /var/tmp/illumio-pipgen/
+  when: "prefix_name in group_names"
 
 
 - name: "Enable conntrack in modprobe"
