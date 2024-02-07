@@ -105,8 +105,6 @@
   shell: rpm -ivh /tmp/{{pce_rpm_software}}
   args:
     warn: false
-  state: present
-  when: "prefix_name in group_names and pce_rpm_software != ''"
 
 - name: "Install PCE UI rpm - {{pce_ui_rpm_software}}"
   shell: rpm -ivh /tmp/{{pce_ui_rpm_software}}
