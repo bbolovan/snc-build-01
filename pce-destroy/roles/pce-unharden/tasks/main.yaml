@@ -44,19 +44,19 @@
   when: "prefix_name in group_names and ipt_stat.stat.exists and ipt_pipgen_stat.stat.exists"
 
 
-- name: "Stop the IPSec daemon"
-  systemd:
-    name: ipsec
-    state: stopped
-    enabled: no
-  when: "prefix_name in group_names"
+# - name: "Stop the IPSec daemon"
+#   systemd:
+#     name: ipsec
+#     state: stopped
+#     enabled: no
+#   when: "prefix_name in group_names"
 
 
-- name: "Clean up illumio-vpngen config"
-  file:
-    path: "{{item}}"
-    state: absent
-  with_items:
-   - /etc/ipsec.d/pce_vpn.conf
-   - /etc/ipsec.d/pce_vpn.secrets
-  when: "prefix_name in group_names"
+# - name: "Clean up illumio-vpngen config"
+#   file:
+#     path: "{{item}}"
+#     state: absent
+#   with_items:
+#    - /etc/ipsec.d/pce_vpn.conf
+#    - /etc/ipsec.d/pce_vpn.secrets
+#   when: "prefix_name in group_names"
