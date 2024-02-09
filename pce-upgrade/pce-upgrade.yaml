@@ -36,7 +36,13 @@
   - name: "set fact variable - node type"
     set_fact:   
       node_type : "{{item}}"
-    when: (item in ["core0","core1","core2","core3","data0","data1"])
+    when: (item in ["snc0","core0","core1","core2","core3","data0","data1"])
+    with_items: "{{hostvars[inventory_hostname]['group_names']}}"
+
+- name: "Set fact variable - node class"
+    set_fact:
+      node_class: "snc"
+    when: (item in ["snc0"])
     with_items: "{{hostvars[inventory_hostname]['group_names']}}"
 
   - name: "Set fact variable - node class"
