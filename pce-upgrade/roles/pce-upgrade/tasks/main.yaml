@@ -99,7 +99,7 @@
   command: illumio-pce-db-management migrate
   become: true
   become_user: ilo-pce
-  when: "prefix_name in group_names and  node_type in ['data0']"
+  when: "prefix_name in group_names and  node_type in ['snc0','data0']"
   args:
     chdir: /tmp/
 
@@ -111,7 +111,7 @@
   register: command_result
   until: command_result.rc == 0
   failed_when: command_result.rc > 3
-  when: "prefix_name in group_names and node_type in ['core0']"
+  when: "prefix_name in group_names and node_type in ['snc0','core0']"
   args:
     chdir: /tmp/
 
@@ -137,7 +137,7 @@
   until: cluster_status.rc == 0
   failed_when: cluster_status.rc > 2
   retries: 0
-  when: "prefix_name in group_names and node_type in ['core0']"
+  when: "prefix_name in group_names and node_type in ['snc0','core0']"
   args:
     chdir: /tmp/
 
