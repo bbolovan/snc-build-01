@@ -1,0 +1,58 @@
+---
+
+- name: "Running illumio-pce-ctl status to check runlevel"
+  command: illumio-pce-ctl status -x
+  become: true
+  become_user: ilo-pce
+  register: pce_status
+  failed_when:  pce_status.rc > 3
+  when: "prefix_name in group_names"
+  args:
+    chdir: /tmp/
+
+
+- name: "Stopping PCE"
+  command: illumio-pce-ctl stop
+  become: true
+  become_user: ilo-pce
+  when: "prefix_name in group_names and pce_status.rc != 3"
+
+
+- name: "Waiting for PCE to stop"
+  command:  illumio-pce-ctl status -w 180
+  become: true
+  become_user: ilo-pce
+  register: pce_status
+  until: pce_status.rc == 0
+  retries: 0
+  when: "prefix_name in group_names and pce_status.rc != 3"
+  args:
+    chdir: /tmp/
+
+
+- name: "Uninstall the UI RPM"
+  #command: rpm -e illumio-pce-ui
+  yum:
+    name: illumio-pce-ui
+    state: absent
+  when: "prefix_name in group_names and 'corenodes' in group_names"
+
+
+- name: "Uninstall the PCE RPM"
+  #command: rpm -e illumio-pce
+  yum:
+    name: illumio-pce
+    state: absent
+  when: "prefix_name in group_names"
+
+
+- name: "Clean up directories"
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+   - /var/lib/illumio-pce/
+   - /var/log/illumio-pce/
+   - /etc/illumio-pce
+   - /opt/illumio-pce
+  when: "prefix_name in group_names"
