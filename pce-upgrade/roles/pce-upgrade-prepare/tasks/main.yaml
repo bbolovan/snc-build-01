@@ -93,7 +93,7 @@
   copy:
       src: "{{pce_ui_rpm_software}}"
       dest: /tmp/
-  when: "prefix_name in group_names and 'corenodes' in group_names and pce_ui_rpm_software != ''"
+  when: "prefix_name in group_names and ('sncnodes' in group_names or 'corenodes' in group_names) and pce_ui_rpm_software != ''"
 
 
 - name: "Take a backup of the PCE Data nodes"

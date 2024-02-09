@@ -12,34 +12,34 @@
 
 
 - name:  "Install PCE  rpm - {{pce_rpm_software}}"
-  shell: rpm -Uvh /tmp/{{pce_rpm_software}}
+  shell: rpm -Uvh /tmp/{{pce_rpm_software}} /tmp/{{pce_ui_rpm_software}}
   args:
     warn: false
   when: "prefix_name in group_names and 'sncnodes' in group_names"
 
-- name: "Install PCE UI rpm - {{pce_ui_rpm_software}}"
-  shell: rpm -Uvh /tmp/{{pce_ui_rpm_software}}
-  args:
-    warn: false
-  when: "prefix_name in group_names and 'sncnodes' in group_names"
+# - name: "Install PCE UI rpm - {{pce_ui_rpm_software}}"
+#   shell: rpm -Uvh /tmp/{{pce_ui_rpm_software}}
+#   args:
+#     warn: false
+#   when: "prefix_name in group_names and 'sncnodes' in group_names"
 
 
 
-- name: "Upgrade PCE rpm on Data nodes"
-  yum:
-      name: 
-       - "/tmp/{{pce_rpm_software}}"
-      state: latest
-  when: "prefix_name in group_names and 'datanodes' in group_names"
+# - name: "Upgrade PCE rpm on Data nodes"
+#   yum:
+#       name: 
+#        - "/tmp/{{pce_rpm_software}}"
+#       state: latest
+#   when: "prefix_name in group_names and 'datanodes' in group_names"
 
 
-- name: "Upgrade PCE and UI RPMs on Core Nodes"
-  yum:
-      name:
-       - "/tmp/{{pce_rpm_software}}"
-       - "/tmp/{{pce_ui_rpm_software}}"
-      state: latest
-  when: "prefix_name in group_names and 'corenodes' in group_names"
+# - name: "Upgrade PCE and UI RPMs on Core Nodes"
+#   yum:
+#       name:
+#        - "/tmp/{{pce_rpm_software}}"
+#        - "/tmp/{{pce_ui_rpm_software}}"
+#       state: latest
+#   when: "prefix_name in group_names and 'corenodes' in group_names"
 
 
 - name: "Clean up RPM package"
