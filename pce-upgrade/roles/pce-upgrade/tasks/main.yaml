@@ -11,7 +11,7 @@
   when: "prefix_name in group_names"
 
 
-- name:  "Install PCE  rpm - {{pce_rpm_software}}"
+- name:  "Install PCE  rpm - {{pce_rpm_software}}" and UI {{pce_ui_rpm_software}}
   shell: rpm -Uvh /tmp/{{pce_rpm_software}} /tmp/{{pce_ui_rpm_software}}
   args:
     warn: false
