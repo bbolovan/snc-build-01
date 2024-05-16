@@ -101,58 +101,58 @@
 #    when: "prefix_name in group_names"
 
 
-# - name:  "Install PCE  rpm - {{pce_rpm_software}}"
-#   shell: rpm -ivh /tmp/{{pce_rpm_software}}
-#   args:
-#     warn: false
+- name:  "Install PCE  rpm - {{pce_rpm_software}}"
+  shell: rpm -Uvh /tmp/{{pce_rpm_software}}
+  args:
+    warn: false
 
-# - name: "Install PCE UI rpm - {{pce_ui_rpm_software}}"
-#   shell: rpm -ivh /tmp/{{pce_ui_rpm_software}}
-#   args:
-#     warn: false
-
-
-# - name: "Clean up RPM package"
-#   file:
-#       path: "/tmp/{{pce_rpm_software}}"
-#       state: absent
-#   when: "prefix_name in group_names and pce_rpm_software != ''"
+- name: "Install PCE UI rpm - {{pce_ui_rpm_software}}"
+  shell: rpm -Uvh /tmp/{{pce_ui_rpm_software}}
+  args:
+    warn: false
 
 
-# - name: "Clean up UI RPM package"
-#   file:
-#       path: "/tmp/{{pce_ui_rpm_software}}"
-#       state: absent
-#   when: "prefix_name in group_names and pce_ui_rpm_software != ''"
+- name: "Clean up RPM package"
+  file:
+      path: "/tmp/{{pce_rpm_software}}"
+      state: absent
+  when: "prefix_name in group_names and pce_rpm_software != ''"
 
 
-# - name: "Copy private key to /var/lib/illumio-pce/cert/"
-#   copy:
-#       src: "{{machine_private_key}}"
-#       dest: /var/lib/illumio-pce/cert/
-#       owner: ilo-pce
-#       group: ilo-pce
-#       mode: 0400
-#   when: "prefix_name in group_names"
+- name: "Clean up UI RPM package"
+  file:
+      path: "/tmp/{{pce_ui_rpm_software}}"
+      state: absent
+  when: "prefix_name in group_names and pce_ui_rpm_software != ''"
 
 
-# - name: "Copy cert bundle to /var/lib/illumio-pce/cert/"
-#   copy:
-#       src: "{{machine_cert}}"
-#       dest: /var/lib/illumio-pce/cert/
-#       owner: ilo-pce
-#       group: ilo-pce
-#       mode: 0440
-#   when: "prefix_name in group_names"
+- name: "Copy private key to /var/lib/illumio-pce/cert/"
+  copy:
+      src: "{{machine_private_key}}"
+      dest: /var/lib/illumio-pce/cert/
+      owner: ilo-pce
+      group: ilo-pce
+      mode: 0400
+  when: "prefix_name in group_names"
 
 
-# - name: "Copy runtime_env.yml template to PCE"
-#   template:
-#       src: runtime_env.yml.j2
-#       dest: /etc/illumio-pce/runtime_env.yml
-#       owner: ilo-pce 
-#       group: ilo-pce    
-#   when: "prefix_name in group_names"
+- name: "Copy cert bundle to /var/lib/illumio-pce/cert/"
+  copy:
+      src: "{{machine_cert}}"
+      dest: /var/lib/illumio-pce/cert/
+      owner: ilo-pce
+      group: ilo-pce
+      mode: 0440
+  when: "prefix_name in group_names"
+
+
+- name: "Copy runtime_env.yml template to PCE"
+  template:
+      src: runtime_env.yml.j2
+      dest: /etc/illumio-pce/runtime_env.yml
+      owner: ilo-pce 
+      group: ilo-pce    
+  when: "prefix_name in group_names"
 
 
 # - name: "Running illumio-pce-env check before starting cluster"
