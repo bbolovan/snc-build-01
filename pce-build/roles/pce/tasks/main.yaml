@@ -249,54 +249,54 @@
     chdir: /tmp/
 
 
-# - name: "Promoting the PCE to run-level 5"
-#   command: illumio-pce-ctl set-runlevel 5
-#   become: true
-#   become_user: ilo-pce
-#   register: command_result
-#   until: command_result.rc == 0
-#   failed_when: command_result.rc == 1
-#   when: "prefix_name in group_names and node_type in ['snc0']"
-#   args:
-#     chdir: /tmp/
+- name: "Promoting the PCE to run-level 5"
+  command: illumio-pce-ctl set-runlevel 5
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result.rc == 0
+  failed_when: command_result.rc == 1
+  when: "prefix_name in group_names and node_type in ['snc0']"
+  args:
+    chdir: /tmp/
 
 
-# - name: "Waiting for PCE to reach run-level 5"
-#   command: illumio-pce-ctl status -x
-#   become: true
-#   become_user: ilo-pce
-#   register: pce_status
-#   until: pce_status.rc == 0
-#   failed_when: pce_status.rc == 3 or 'STOPPED' in pce_status.stdout
-#   retries: 0
-#   when: "prefix_name in group_names"
-#   args:
-#     chdir: /tmp/
+- name: "Waiting for PCE to reach run-level 5"
+  command: illumio-pce-ctl status -x
+  become: true
+  become_user: ilo-pce
+  register: pce_status
+  until: pce_status.rc == 0
+  failed_when: pce_status.rc == 3 or 'STOPPED' in pce_status.stdout
+  retries: 0
+  when: "prefix_name in group_names"
+  args:
+    chdir: /tmp/
 
 
-# - name: "Waiting for Cluster Status to reach run-level 5"
-#   command: illumio-pce-ctl cluster-status -x
-#   become: true
-#   become_user: ilo-pce
-#   register: cluster_status
-#   until: cluster_status.rc == 0
-#   failed_when: cluster_status.rc > 2
-#   retries: 0
-#   when: "prefix_name in group_names and node_type in ['snc0']"
-#   args:
-#     chdir: /tmp/
+- name: "Waiting for Cluster Status to reach run-level 5"
+  command: illumio-pce-ctl cluster-status -x
+  become: true
+  become_user: ilo-pce
+  register: cluster_status
+  until: cluster_status.rc == 0
+  failed_when: cluster_status.rc > 2
+  retries: 0
+  when: "prefix_name in group_names and node_type in ['snc0']"
+  args:
+    chdir: /tmp/
 
 
-# - name: "Creating org and adding first user with illumio-pce-db-management"
-#   command: illumio-pce-db-management create-domain --user-name {{pce_ui_username}} --full-name '{{pce_ui_fullname}}' --org-name '{{org_name}}'
-#   environment:
-#     ILO_PASSWORD: "{{pce_ui_password}}"
-#   become: true
-#   become_user: ilo-pce
-#   register: create_domain_result
-#   failed_when:
-#     create_domain_result.rc != 0 and 'Org already exists' not in create_domain_result.stdout
-#   when: "prefix_name in group_names and node_type in ['snc0']"
-#   args:
-#     chdir: /tmp/
+- name: "Creating org and adding first user with illumio-pce-db-management"
+  command: illumio-pce-db-management create-domain --user-name {{pce_ui_username}} --full-name '{{pce_ui_fullname}}' --org-name '{{org_name}}'
+  environment:
+    ILO_PASSWORD: "{{pce_ui_password}}"
+  become: true
+  become_user: ilo-pce
+  register: create_domain_result
+  failed_when:
+    create_domain_result.rc != 0 and 'Org already exists' not in create_domain_result.stdout
+  when: "prefix_name in group_names and node_type in ['snc0']"
+  args:
+    chdir: /tmp/
 
