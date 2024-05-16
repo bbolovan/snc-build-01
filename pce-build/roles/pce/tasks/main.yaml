@@ -287,16 +287,16 @@
     chdir: /tmp/
 
 
-- name: "Creating org and adding first user with illumio-pce-db-management"
-  command: illumio-pce-db-management create-domain --user-name {{pce_ui_username}} --full-name '{{pce_ui_fullname}}' --org-name '{{org_name}}'
-  environment:
-    ILO_PASSWORD: "{{pce_ui_password}}"
-  become: true
-  become_user: ilo-pce
-  register: create_domain_result
-  failed_when:
-    create_domain_result.rc != 0 and 'Org already exists' not in create_domain_result.stdout
-  when: "prefix_name in group_names and node_type in ['snc0']"
-  args:
-    chdir: /tmp/
+# - name: "Creating org and adding first user with illumio-pce-db-management"
+#   command: illumio-pce-db-management create-domain --user-name {{pce_ui_username}} --full-name '{{pce_ui_fullname}}' --org-name '{{org_name}}'
+#   environment:
+#     ILO_PASSWORD: "{{pce_ui_password}}"
+#   become: true
+#   become_user: ilo-pce
+#   register: create_domain_result
+#   failed_when:
+#     create_domain_result.rc != 0 and 'Org already exists' not in create_domain_result.stdout
+#   when: "prefix_name in group_names and node_type in ['snc0']"
+#   args:
+#     chdir: /tmp/
 
