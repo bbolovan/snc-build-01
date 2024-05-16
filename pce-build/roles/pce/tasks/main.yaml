@@ -155,98 +155,98 @@
   when: "prefix_name in group_names"
 
 
-# - name: "Running illumio-pce-env check before starting cluster"
-#   command: illumio-pce-env check
-#   become: true
-#   become_user: ilo-pce
-#   when: "prefix_name in group_names"
+- name: "Running illumio-pce-env check before starting cluster"
+  command: illumio-pce-env check
+  become: true
+  become_user: ilo-pce
+  when: "prefix_name in group_names"
 
 
-# - name: "Running illumio-pce-ctl status to check runlevel"
-#   command: illumio-pce-ctl status -x
-#   become: true
-#   become_user: ilo-pce
-#   register: pce_status
-#   failed_when: pce_status.rc > 3
-#   when: "prefix_name in group_names"
-#   args:
-#     chdir: /tmp/
+- name: "Running illumio-pce-ctl status to check runlevel"
+  command: illumio-pce-ctl status -x
+  become: true
+  become_user: ilo-pce
+  register: pce_status
+  failed_when: pce_status.rc > 3
+  when: "prefix_name in group_names"
+  args:
+    chdir: /tmp/
 
 
-# - name: "Start PCE"
-#   command: illumio-pce-ctl start --runlevel 1
-#   become: true
-#   become_user: ilo-pce
-#   register: command_result
-#   until: command_result == 0
-#   failed_when: command_result.rc == 1
-#   retries: 0
-#   when: "prefix_name in group_names and pce_status.rc == 3"
-#   args:
-#     chdir: /tmp/
+- name: "Start PCE"
+  command: illumio-pce-ctl start --runlevel 1
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result == 0
+  failed_when: command_result.rc == 1
+  retries: 0
+  when: "prefix_name in group_names and pce_status.rc == 3"
+  args:
+    chdir: /tmp/
 
 
-# - name: "Set PCE to runlevel 1"
-#   command: illumio-pce-ctl set-runlevel 1
-#   become: true
-#   become_user: ilo-pce
-#   register: command_result
-#   until: command_result.rc == 1
-#   failed_when: command_result.rc == 0
-#   ignore_errors: true
-#   when: "prefix_name in group_names and pce_status.rc == 0 and node_type in ['core0']"
-#   args:
-#     chdir: /tmp/
+- name: "Set PCE to runlevel 1"
+  command: illumio-pce-ctl set-runlevel 1
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result.rc == 1
+  failed_when: command_result.rc == 0
+  ignore_errors: true
+  when: "prefix_name in group_names and pce_status.rc == 0 and node_type in ['core0']"
+  args:
+    chdir: /tmp/
 
 
-# - name: "Wait for the pce to start to runlevel 1"
-#   command: illumio-pce-ctl status -w 180
-#   become: true
-#   become_user: ilo-pce
-#   register: pce_status2
-#   until: pce_status2.rc == 1
-#   failed_when: pce_status2.rc > 3
-#   retries: 0
-#   when: "prefix_name in group_names and (pce_status.rc == 3 or pce_status.rc == 0)"
-#   args:
-#     chdir: /tmp/
+- name: "Wait for the pce to start to runlevel 1"
+  command: illumio-pce-ctl status -w 180
+  become: true
+  become_user: ilo-pce
+  register: pce_status2
+  until: pce_status2.rc == 1
+  failed_when: pce_status2.rc > 3
+  retries: 0
+  when: "prefix_name in group_names and (pce_status.rc == 3 or pce_status.rc == 0)"
+  args:
+    chdir: /tmp/
 
 
-# - name: "Restart stalled node"
-#   command: illumio-pce-ctl restart
-#   become: true
-#   become_user: ilo-pce
-#   register: command_result
-#   until: command_result.rc == 0
-#   when: "prefix_name in group_names and (pce_status.rc == 2 or pce_status2.rc|default(0) == 2)"
-#   args:
-#     chdir: /tmp
+- name: "Restart stalled node"
+  command: illumio-pce-ctl restart
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result.rc == 0
+  when: "prefix_name in group_names and (pce_status.rc == 2 or pce_status2.rc|default(0) == 2)"
+  args:
+    chdir: /tmp
 
 
-# - name: "Wait for the PCE to start to runlevel 1"
-#   command: illumio-pce-ctl status -w 180
-#   become: true
-#   become_user: ilo-pce
-#   register: pce_status2
-#   until: pce_status2.rc == 1
-#   failed_when: pce_status2.rc > 3
-#   retries: 0
-#   when: "prefix_name in group_names and (pce_status.rc == 2 or pce_status2.rc|default(0) == 2)"
-#   args:
-#     chdir: /tmp/
+- name: "Wait for the PCE to start to runlevel 1"
+  command: illumio-pce-ctl status -w 180
+  become: true
+  become_user: ilo-pce
+  register: pce_status2
+  until: pce_status2.rc == 1
+  failed_when: pce_status2.rc > 3
+  retries: 0
+  when: "prefix_name in group_names and (pce_status.rc == 2 or pce_status2.rc|default(0) == 2)"
+  args:
+    chdir: /tmp/
 
 
-# - name: "Setting up DB with illumio-pce-db-management"
-#   command: illumio-pce-db-management migrate
-#   become: true
-#   become_user: ilo-pce
-#   register: command_result
-#   until: command_result == 0
-#   failed_when: command_result == 1
-#   retries: 0
-#   when: "prefix_name in group_names and node_type in ['snc0']"
-#   args:
-#     chdir: /tmp/
+- name: "Setting up DB with illumio-pce-db-management"
+  command: illumio-pce-db-management migrate
+  become: true
+  become_user: ilo-pce
+  register: command_result
+  until: command_result == 0
+  failed_when: command_result == 1
+  retries: 0
+  when: "prefix_name in group_names and node_type in ['snc0']"
+  args:
+    chdir: /tmp/
 
 
 # - name: "Promoting the PCE to run-level 5"
