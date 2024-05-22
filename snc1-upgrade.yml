@@ -2,7 +2,7 @@
     "pce_rpm_software" : "illumio-pce-23.2.20.el8.x86_64.rpm",
     "pce_ui_rpm_software" : "illumio-pce-ui-23.2.20.UI2-201.x86_64.rpm",
     "install_root" : "/opt/illumio-pce",
-    "runtime_data_dir" : "/var/lib/illumio-pce/tmp",
+    "runtime_data_dir" : "/var/lib/illumio-pce/runtime",
     "persistent_data_dir" : "/var/lib/illumio-pce/data",
     "ephemeral_data_dir" : "/var/lib/illumio-pce/tmp",
     "log_dir" : "/var/log/illumio-pce",
