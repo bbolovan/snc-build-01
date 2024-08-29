@@ -1,7 +1,15 @@
-#ansible-playbook -u ansible --extra-vars "@./mnc13.yml.19.3.0" ./pce-build/pce-build.yaml
-#ansible-playbook -u ansible --extra-vars "@./mnc13.yml.19.3.1" ./pce-build/pce-upgrade.yaml
-#ansible-playbook -u ansible --extra-vars "@./mnc13.yml.19.3.1" ./pce-build/pce-destroy.yaml
-ansible-playbook -u ansible --extra-vars "@./snc1.yml" ./pce-build/pce-build.yaml
-#ansible-playbook -u ansible --extra-vars "@./snc1.yml" ./pce-build/pce-upgrade.yaml
-ansible-playbook -u ansible --extra-vars "@./snc1.yml" ./pce-build/pce-destroy.yaml
+#Execute-ansible-playbook-snc-build-01-pce-build.sh
+#!/bin/bash
+cd /home/ansible/snc-build-01
+ansible-playbook -u ansible -i /home/ansible/snc-build-01/hosts --extra-vars "@./snc1.yml" ./pce-build/pce-build.yaml
 
+#Execute-ansible-playbook-snc-build-01-pce-destroy.sh
+#!/bin/bash
+cd /home/ansible/snc-build-01
+ansible-playbook -u ansible -i /home/ansible/snc-build-01/hosts --extra-vars "@./snc1.yml" ./pce-destroy/pce-destroy.yaml
+
+
+#Execute-ansible-playbook-snc-build-01-pce-upgrade.sh
+#!/bin/bash
+cd /home/ansible/snc-build-01
+ansible-playbook -u ansible -i /home/ansible/snc-build-01/hosts --extra-vars "@./snc1-upgrade.yml" ./pce-upgrade/pce-upgrade.yaml
